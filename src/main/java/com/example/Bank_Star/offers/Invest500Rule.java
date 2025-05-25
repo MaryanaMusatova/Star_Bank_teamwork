@@ -12,9 +12,6 @@ import java.math.BigDecimal;
 import java.util.Optional;
 import java.util.UUID;
 
-import static Invest500Rule.INVEST_500;
-
-
 @Component
 public class Invest500Rule implements RecommendationRule {
     private static final Recommendation INVEST_500 = new Recommendation(

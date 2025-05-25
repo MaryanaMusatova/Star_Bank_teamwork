@@ -17,7 +17,7 @@ public class RecommendationController {
         this.service = service;
     }
 
-    @GetMapping("/userId")
+    @GetMapping("/{userId}")
     public RecommendationResponse getRecommendations(@PathVariable UUID userId) {
         return service.getRecommendations(userId);
     }
