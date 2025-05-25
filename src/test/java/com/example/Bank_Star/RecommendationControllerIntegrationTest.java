@@ -1,8 +1,7 @@
 package com.example.Bank_Star;
 
-import com.example.Bank_Star.domen.Recommendation;
 import com.example.Bank_Star.domen.RecommendationResponse;
-import com.example.Bank_Star.service.RecommendationService;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -10,15 +9,16 @@ import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.test.context.ActiveProfiles;
 
-import java.util.List;
 import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.when;
+import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-class RecommendationControllerIntegrationTest {
+@ActiveProfiles("test")
+public class RecommendationControllerIntegrationTest {
 
     @LocalServerPort
     private int port;
@@ -27,47 +27,84 @@ class RecommendationControllerIntegrationTest {
     private TestRestTemplate restTemplate;
 
     @Autowired
-    private RecommendationService recommendationService;
+    private JdbcTemplate jdbcTemplate; // используем основной JdbcTemplate
 
-    @Test
-    void getRecommendations_ShouldReturnValidResponse() {
+    private String baseUrl;
 
-        UUID userId = UUID.fromString("cd515076-5d8a-44be-930e-8d4fcb79f42d");
-        Recommendation recommendation = new Recommendation(
-                UUID.fromString("147f6a0f-3b91-413b-ab99-87f081d60d5a"),
-                "Invest 500",
-                "Test description"
-        );
+    @BeforeEach
+    void setUp() {
+        baseUrl = "http://localhost:" + port + "/recommendations/";
 
-        when(recommendationService.getRecommendations(userId))
-                .thenReturn(new RecommendationResponse(userId, List.of(recommendation)));
+        // Создаем таблицы только если они не существуют
+        try {
+            jdbcTemplate.execute("CREATE TABLE IF NOT EXISTS users (" +
+                    "id UUID PRIMARY KEY, " +
+                    "username VARCHAR(255) NOT NULL)");
 
+            jdbcTemplate.execute("CREATE TABLE IF NOT EXISTS products (" +
+                    "id UUID PRIMARY KEY, " +
+                    "type VARCHAR(50) NOT NULL)");
 
-        String url = "http://localhost:" + port + "/recommendations/" + userId;
-        ResponseEntity<RecommendationResponse> response = restTemplate.getForEntity(
-                url, RecommendationResponse.class);
+            jdbcTemplate.execute("CREATE TABLE IF NOT EXISTS user_products (" +
+                    "user_id UUID NOT NULL, " +
+                    "product_id UUID NOT NULL, " +
+                    "PRIMARY KEY (user_id, product_id))");
 
-
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertNotNull(response.getBody());
-        assertEquals(1, response.getBody().recommendations().size());
-        assertEquals("Invest 500", response.getBody().recommendations().get(0).name());
+            jdbcTemplate.execute("CREATE TABLE IF NOT EXISTS transactions (" +
+                    "id UUID PRIMARY KEY, " +
+                    "user_id UUID NOT NULL, " +
+                    "product_id UUID NOT NULL, " +
+                    "type VARCHAR(50) NOT NULL, " +
+                    "amount DECIMAL(19,2) NOT NULL)");
+        } catch (Exception e) {
+            System.err.println("Error creating tables: " + e.getMessage());
+        }
     }
 
     @Test
-    void getRecommendations_WhenUserNotFound_ShouldReturn404() {
+    void getRecommendations_shouldReturnRecommendationsForValidUser() {
 
+        UUID userId = UUID.randomUUID();
+        UUID productId1 = UUID.randomUUID();
+        UUID productId2 = UUID.randomUUID();
+        UUID transactionId = UUID.randomUUID();
+
+        jdbcTemplate.update("INSERT INTO users (id, username) VALUES (?, ?)",
+                userId.toString(), "testuser");
+        jdbcTemplate.update("INSERT INTO products (id, type) VALUES (?, ?)",
+                productId1.toString(), "DEBIT");
+        jdbcTemplate.update("INSERT INTO products (id, type) VALUES (?, ?)",
+                productId2.toString(), "SAVING");
+        jdbcTemplate.update("INSERT INTO user_products (user_id, product_id) VALUES (?, ?)",
+                userId.toString(), productId1.toString());
+        jdbcTemplate.update("INSERT INTO user_products (user_id, product_id) VALUES (?, ?)",
+                userId.toString(), productId2.toString());
+        jdbcTemplate.update("""
+                        INSERT INTO transactions (id, user_id, product_id, type, amount) 
+                        VALUES (?, ?, ?, ?, ?)""",
+                transactionId.toString(), userId.toString(), productId2.toString(),
+                "DEPOSIT", 1500.00);
+
+
+        ResponseEntity<RecommendationResponse> response = restTemplate.getForEntity(
+                baseUrl + userId, RecommendationResponse.class);
+
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody().userId()).isEqualTo(userId);
+        assertThat(response.getBody().recommendations()).isNotEmpty();
+    }
+
+    @Test
+    void getRecommendations_shouldReturn404ForNonExistentUser() {
         UUID nonExistentUserId = UUID.randomUUID();
 
-        when(recommendationService.getRecommendations(nonExistentUserId))
-                .thenThrow(new RecommendationService.UserNotFoundException("User not found"));
+        ResponseEntity<String> response = restTemplate.getForEntity(
+                baseUrl + nonExistentUserId, String.class);
 
 
-        String url = "http://localhost:" + port + "/recommendations/" + nonExistentUserId;
-        ResponseEntity<String> response = restTemplate.getForEntity(url, String.class);
-
-
-        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
-        assertTrue(response.getBody().contains("User not found"));
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+        assertThat(response.getBody()).contains("User not found");
     }
 }
