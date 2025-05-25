@@ -4,9 +4,7 @@ import com.example.Bank_Star.domen.Recommendation;
 import com.example.Bank_Star.domen.RecommendationResponse;
 import com.example.Bank_Star.domen.RecommendationRule;
 import com.example.Bank_Star.repository.RecommendationsRepository;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.Optional;
@@ -25,7 +23,7 @@ public class RecommendationService {
     }
 
     public RecommendationResponse getRecommendations(UUID userId) {
-        if (!repository.isUserExists(userId)) {
+        if (!repository.isUserExixts(userId)) {
             throw new UserNotFoundException("User not found with ID: " + userId);
         }
 
