@@ -17,14 +17,18 @@ public class RecommendationService {
     private final List<RecommendationRule> rules;
     private final RecommendationsRepository repository;
 
+
     public RecommendationService(List<RecommendationRule> rules,
                                  RecommendationsRepository repository) {
+
         this.rules = rules;
         this.repository = repository;
     }
 
     public RecommendationResponse getRecommendations(UUID userId) {
+
         if (!repository.isUserExists(userId)) {
+
             throw new UserNotFoundException("User not found with ID: " + userId);
         }
 

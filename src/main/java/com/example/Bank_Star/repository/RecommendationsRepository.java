@@ -14,6 +14,7 @@ import java.util.UUID;
 public class RecommendationsRepository {
     private final JdbcTemplate jdbcTemplate;
 
+
     public RecommendationsRepository(
             @Qualifier("recommendationsJdbcTemplate") JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
@@ -24,6 +25,7 @@ public class RecommendationsRepository {
         return Boolean.TRUE.equals(jdbcTemplate.queryForObject(
                 sql, Boolean.class, userId.toString()));
     }
+
 
     //Метод проверяет, использует ли указанный пользователь
 //хотя бы один продукт определенного типа (PS Артем Васяткин)
