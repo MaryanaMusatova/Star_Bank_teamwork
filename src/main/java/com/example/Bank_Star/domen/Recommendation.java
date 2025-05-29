@@ -8,4 +8,7 @@ public record Recommendation(
         UUID id,
         String name,
         String text
-) {}
+
+) {
+}
+

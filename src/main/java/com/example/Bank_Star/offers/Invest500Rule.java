@@ -12,9 +12,12 @@ import java.math.BigDecimal;
 import java.util.Optional;
 import java.util.UUID;
 
+
+
 @Component
 public class Invest500Rule implements RecommendationRule {
-    private static final Recommendation INVEST_500 = new Recommendation(
+    static final Recommendation INVEST_500 = new Recommendation(
+
             UUID.fromString("147f6a0f-3b91-413b-ab99-87f081d60d5a"),
             "Invest 500",
             "Откройте свой путь к успеху с индивидуальным " +
