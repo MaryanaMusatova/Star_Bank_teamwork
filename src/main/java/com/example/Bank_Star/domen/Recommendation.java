@@ -8,4 +8,14 @@ public record Recommendation(
         String name,
         String text
 ) {
+
+    public String getName() {
+        return name;
+    }
+
+    public String getText() {
+        return text;
+    }
 }
+
+

@@ -28,4 +28,27 @@ public class RecommendationService {
             super(message);
         }
     }
+
+    public String getRecommendations(String username) {
+        UUID userId = repository.getUserIdByUsername(username);
+        if (userId == null) {
+            return "Пользователь не найден";
+        }
+
+        List<Recommendation> recommendations = repository.getRecommendations(userId);
+        if (recommendations.isEmpty()) {
+            return "Рекомендации отсутствуют";
+        }
+
+        StringBuilder sb = new StringBuilder();
+        sb.append("Здравствуйте ").append(username).append("!\n");
+        sb.append("Новые продукты для вас:\n");
+        for (Recommendation recommendation : recommendations) {
+            sb.append(recommendation.getName()).append(" - ").append(recommendation.getText()).append("\n");
+        }
+        return sb.toString();
+    }
+
+    public void clearCaches() {
+    }
 }
