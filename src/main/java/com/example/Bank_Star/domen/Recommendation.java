@@ -10,5 +10,12 @@ public record Recommendation(
         String text
 
 ) {
+    public String getName() {
+        return name;
+    }
+
+    public String getText() {
+        return text;
+    }
 }
 

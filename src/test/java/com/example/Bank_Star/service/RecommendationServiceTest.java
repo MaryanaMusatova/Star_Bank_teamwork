@@ -41,7 +41,7 @@ public class RecommendationServiceTest {
     @Test
     void testGetRecommendationsWhenUserExistsButNoRecommendationsAreAvailable() {
         UUID userId = UUID.randomUUID();
-        when(repository.isUserExixts(userId)).thenReturn(true);
+        when(repository.isUserExists(userId)).thenReturn(true);
 
         when(rules.get(0).check(eq(userId), eq(repository))).thenReturn(Optional.empty());
 
@@ -54,7 +54,7 @@ public class RecommendationServiceTest {
     @Test
     void testGetRecommendationsWhenUserDoesntExist() {
         UUID nonExistingUserId = UUID.randomUUID();
-        when(repository.isUserExixts(nonExistingUserId)).thenReturn(false);
+        when(repository.isUserExists(nonExistingUserId)).thenReturn(false);
 
         Throwable thrown = assertThrows(RecommendationService.UserNotFoundException.class, () -> service.getRecommendations(nonExistingUserId));
         assertEquals(thrown.getMessage(), "User not found with ID: " + nonExistingUserId);
@@ -63,7 +63,7 @@ public class RecommendationServiceTest {
     @Test
     void testGetRecommendationsNoRecommendationsGenerated() {
         UUID existingUserId = UUID.randomUUID();
-        when(repository.isUserExixts(existingUserId)).thenReturn(true);
+        when(repository.isUserExists(existingUserId)).thenReturn(true);
 
         when(rules.get(0).check(eq(existingUserId), eq(repository)))
                 .thenReturn(Optional.empty());

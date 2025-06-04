@@ -1,19 +1,25 @@
 package com.example.Bank_Star.repository;
 
+import com.example.Bank_Star.domen.Recommendation;
+import com.example.Bank_Star.domen.RuleStats;
 import com.example.Bank_Star.enums.ComparisonType;
 import com.example.Bank_Star.enums.ProductType;
 import com.example.Bank_Star.enums.TransactionType;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.UUID;
 
 @Repository
 public class RecommendationsRepository {
     private final JdbcTemplate jdbcTemplate;
 
+    @Autowired
+    private RuleStatsRepository ruleStatsRepository;
 
     public RecommendationsRepository(
             @Qualifier("recommendationsJdbcTemplate") JdbcTemplate jdbcTemplate) {
@@ -81,4 +87,30 @@ public class RecommendationsRepository {
             case GREATER_OR_EQUAL -> a.compareTo(b) >= 0;
         };
     }
+
+    public UUID getUserIdByUsername(String username) {
+        String sql = "SELECT id FROM users WHERE username = ?";
+        return jdbcTemplate.queryForObject(sql, UUID.class, username);
+    }
+
+    public List<Recommendation> getRecommendations(UUID userId) {
+        String sql = "SELECT * FROM recommendations WHERE user_id = ?";
+        return jdbcTemplate.query(sql, (rs, rowNum) -> {
+            UUID id = UUID.fromString(rs.getString("id"));
+            String name = rs.getString("name");
+            String description = rs.getString("description");
+            return new Recommendation(id, name, description);
+        }, userId.toString());
+    }
+
+    public void incrementRuleCount(String ruleId) {
+        RuleStats ruleStats = ruleStatsRepository.findById(ruleId).orElse(new RuleStats(ruleId, 0));
+        ruleStats.setCount(ruleStats.getCount() + 1);
+        ruleStatsRepository.save(ruleStats);
+    }
+
+    public void deleteRuleCount(String ruleId) {
+        ruleStatsRepository.deleteById(ruleId);
+    }
+
 }
