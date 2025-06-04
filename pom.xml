@@ -54,12 +54,14 @@
 			<scope>test</scope>
 		</dependency>
 
+
 		<dependency>
 			<groupId>org.mockito</groupId>
 			<artifactId>mockito-core</artifactId>
 			<version>4.0.0</version>
 			<scope>test</scope>
 		</dependency>
+
 
 		<dependency>
 			<groupId>org.junit.jupiter</groupId>
@@ -74,6 +76,7 @@
 		</dependency>
 
 		<dependency>
+
 			<groupId>org.telegram</groupId>
 			<artifactId>telegrambots-spring-boot-starter</artifactId>
 			<version>6.8.0</version>
@@ -91,6 +94,7 @@
         </dependency>
 
     </dependencies>
+
 
 	<build>
 		<plugins>
