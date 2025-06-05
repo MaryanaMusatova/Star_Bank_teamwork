@@ -1,0 +1,21 @@
+spring:
+  application:
+    name: BankStarApplication
+
+  datasource:
+    url: jdbc:h2:file:./transaction;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    driver-class-name: org.h2.Driver
+    username:
+    password:
+
+recommendations:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/recommendations
+    username: student
+    password: chocolatefrog
+    driver-class-name: org.postgresql.Driver
+
+telegram:
+  bot:
+    token: 8147749676:AAGVLhjVTFmORaRrqKxKVN8cW8j_nWUSMCQ
+    username: anvarkartakaevBot
