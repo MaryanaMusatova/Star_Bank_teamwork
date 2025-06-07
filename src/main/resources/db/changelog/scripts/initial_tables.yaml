@@ -1,5 +1,5 @@
 databaseChangeLog:
-  # Сначала создаем таблицы
+  # Create tables
   - changeSet:
       id: 1
       author: teem
@@ -111,7 +111,7 @@ databaseChangeLog:
             referencedColumnNames: id
             onDelete: CASCADE
 
-  # Затем заполняем данными
+  # Entering data
   - changeSet:
       id: 7
       author: teem

@@ -16,7 +16,6 @@ public class RuleQuery {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
-
     private String query;
     private String arguments;
     private Boolean negate;

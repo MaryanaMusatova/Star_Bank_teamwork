@@ -19,7 +19,6 @@ public class RuleStats {
         this.count = count;
     }
 
-
     public String getRuleId() {
         return ruleId;
     }
