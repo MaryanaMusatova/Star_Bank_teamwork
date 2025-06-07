@@ -33,7 +33,6 @@ public class TopSavingRule implements RecommendationRule {
     @Override
     public Optional<Recommendation> check(UUID userId, RecommendationsRepository repository) {
         boolean rule1 = repository.usesProductType(userId, ProductType.DEBIT);
-
         boolean rule2a = repository.compareTransactionSum(
                 userId, ProductType.DEBIT, TransactionType.DEPOSIT,
                 ComparisonType.GREATER_OR_EQUAL, new BigDecimal("50000"));
@@ -41,12 +40,10 @@ public class TopSavingRule implements RecommendationRule {
                 userId, ProductType.SAVING, TransactionType.DEPOSIT,
                 ComparisonType.GREATER_OR_EQUAL, new BigDecimal("50000"));
         boolean rule2 = rule2a || rule2b;
-
         boolean rule3 = repository.compareTransactionSum(
                 userId, ProductType.DEBIT, TransactionType.DEPOSIT,
                 ComparisonType.GREATER,
                 repository.getTransactionSum(userId, ProductType.DEBIT, TransactionType.WITHDRAW));
-
         return rule1 && rule2 && rule3 ? Optional.of(TOP_SAVING) : Optional.empty();
     }
 }

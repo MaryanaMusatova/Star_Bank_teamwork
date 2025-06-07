@@ -27,10 +27,10 @@ public class RecommendationService {
     private final RuleStatsRepository ruleStatsRepository;
 
     public RecommendationResponse getRecommendations(UUID userId) {
-        log.info("Getting recommendations for user: {}", userId);
+        log.info("Получение рекомендаций для пользователя: {}", userId);
         if (!repository.isUserExists(userId)) {
-            log.warn("User not found: {}", userId);
-            throw new UserNotFoundException("User not found with ID: " + userId);
+            log.warn("Пользователь не найден: {}", userId);
+            throw new UserNotFoundException("Пользователь с ID: " + userId + " не найден");
         }
 
         List<Recommendation> recommendations = staticRules.stream()
@@ -54,7 +54,7 @@ public class RecommendationService {
     }
 
     private boolean checkDynamicRule(UUID userId, DynamicRule rule) {
-        log.debug("Checking dynamic rule {} for user {}", rule.getId(), userId);
+        log.debug("Проверка динамического правила {} для пользователя {}", rule.getId(), userId);
         for (RuleQuery query : rule.getRule()) {
             boolean result = evaluateQuery(userId, query);
             if (query.getNegate() != null && query.getNegate()) {
@@ -69,7 +69,6 @@ public class RecommendationService {
 
     private boolean evaluateQuery(UUID userId, RuleQuery query) {
         String[] args = query.getArguments().split(",");
-
         switch (query.getQuery()) {
             case "USER_OF":
                 return repository.usesProductType(userId,
@@ -101,7 +100,6 @@ public class RecommendationService {
         TransactionType transactionType = TransactionType.valueOf(args[1]);
         ComparisonType comparison = ComparisonType.valueOf(args[2]);
         BigDecimal value = new BigDecimal(args[3]);
-
         BigDecimal sum = repository.getTransactionSum(userId, productType, transactionType);
         return compareValues(sum, comparison, value);
     }
@@ -109,7 +107,6 @@ public class RecommendationService {
     private boolean compareDepositWithdraw(UUID userId, String[] args) {
         ProductType productType = ProductType.valueOf(args[0]);
         ComparisonType comparison = ComparisonType.valueOf(args[1]);
-
         BigDecimal depositSum = repository.getTransactionSum(userId, productType, TransactionType.DEPOSIT);
         BigDecimal withdrawSum = repository.getTransactionSum(userId, productType, TransactionType.WITHDRAW);
         return compareValues(depositSum, comparison, withdrawSum);
@@ -153,7 +150,7 @@ public class RecommendationService {
 
     public void clearCaches() {
         repository.clearAllCaches();
-        log.info("All recommendation caches cleared");
+        log.info("Все кэши рекомендаций очищены");
     }
 
     private void incrementRuleStats(String ruleId) {
@@ -161,6 +158,6 @@ public class RecommendationService {
                 .orElse(new RuleStats(ruleId, 0));
         stats.setCount(stats.getCount() + 1);
         ruleStatsRepository.save(stats);
-        log.debug("Incremented stats for rule {} to {}", ruleId, stats.getCount());
+        log.debug("Увеличена статистика для правила {} до {}", ruleId, stats.getCount());
     }
 }

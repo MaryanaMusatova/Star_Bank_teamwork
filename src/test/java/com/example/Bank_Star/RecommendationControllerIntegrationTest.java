@@ -57,7 +57,7 @@ public class RecommendationControllerIntegrationTest {
                     "type VARCHAR(50) NOT NULL, " +
                     "amount DECIMAL(19,2) NOT NULL)");
         } catch (Exception e) {
-            System.err.println("Error creating tables: " + e.getMessage());
+            System.err.println("Ошибка создания таблиц: " + e.getMessage());
         }
     }
 
@@ -105,6 +105,6 @@ public class RecommendationControllerIntegrationTest {
 
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
-        assertThat(response.getBody()).contains("User not found");
+        assertThat(response.getBody()).contains("Пользователь не найден");
     }
 }

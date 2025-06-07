@@ -31,8 +31,8 @@ class RecommendationControllerTests {
         UUID validUserId = UUID.randomUUID();
 
         List<Recommendation> recommendations = List.of(
-                new Recommendation(UUID.randomUUID(), "First Rec", "Text of first recommendation"),
-                new Recommendation(UUID.randomUUID(), "Second Rec", "Text of second recommendation")
+                new Recommendation(UUID.randomUUID(), "Первая рекомендация", "Текст первой рекомендации"),
+                new Recommendation(UUID.randomUUID(), "Вторая рекомендация", "Текст второй рекомендации")
         );
 
         RecommendationResponse expectedResponse = new RecommendationResponse(validUserId, recommendations);
