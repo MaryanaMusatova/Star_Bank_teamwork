@@ -1,6 +1,5 @@
 package com.example.Bank_Star.service;
 
-
 import com.example.Bank_Star.domen.DynamicRule;
 import com.example.Bank_Star.repository.DynamicRuleRepository;
 import com.example.Bank_Star.repository.RuleStatsRepository;
@@ -31,6 +30,6 @@ public class DynamicRuleService {
         repository.deleteByProductId(productId);
         // Удаляем статистику для этого правила
         ruleStatsRepository.deleteById(productId.toString());
-        log.info("Deleted rule with productId {} and its stats", productId);
+        log.info("Удалено правило с productId {} и его статистика", productId);
     }
 }

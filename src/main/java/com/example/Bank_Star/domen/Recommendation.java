@@ -1,6 +1,5 @@
 package com.example.Bank_Star.domen;
 
-
 import java.util.UUID;
 
 public record Recommendation(
@@ -8,7 +7,6 @@ public record Recommendation(
         String name,
         String text
 ) {
-
     public String getName() {
         return name;
     }

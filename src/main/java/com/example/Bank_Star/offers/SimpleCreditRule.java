@@ -22,13 +22,10 @@ public class SimpleCreditRule implements RecommendationRule {
     @Override
     public Optional<Recommendation> check(UUID userId, RecommendationsRepository repository) {
         boolean rule1 = repository.hasNoProductType(userId, ProductType.CREDIT);
-
         BigDecimal depositSum = repository.getTransactionSum(userId, ProductType.DEBIT, TransactionType.DEPOSIT);
         BigDecimal withdrawSum = repository.getTransactionSum(userId, ProductType.DEBIT, TransactionType.WITHDRAW);
         boolean rule2 = depositSum.compareTo(withdrawSum) > 0;
-
         boolean rule3 = withdrawSum.compareTo(new BigDecimal("100000")) > 0;
-
         return rule1 && rule2 && rule3 ? Optional.of(SIMPLE_CREDIT) : Optional.empty();
     }
 }

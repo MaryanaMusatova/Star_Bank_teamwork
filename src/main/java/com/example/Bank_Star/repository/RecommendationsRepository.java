@@ -129,7 +129,7 @@ public class RecommendationsRepository {
         String sql = "SELECT id FROM users WHERE username = ?";
         List<UUID> userIds = jdbcTemplate.queryForList(sql, UUID.class, username);
         if (userIds.size() != 1) {
-            log.warn("Found {} users with username {}", userIds.size(), username);
+            log.warn("Найдено {} пользователей с именем пользователя {}", userIds.size(), username);
             return null;
         }
         return userIds.get(0);
@@ -160,6 +160,6 @@ public class RecommendationsRepository {
         usesProductCache.invalidateAll();
         transactionSumCache.invalidateAll();
         activeUserCache.invalidateAll();
-        log.debug("All caches invalidated");
+        log.debug("Все кэши аннулированы");
     }
 }

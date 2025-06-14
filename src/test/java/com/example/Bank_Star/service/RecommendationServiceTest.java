@@ -57,7 +57,7 @@ public class RecommendationServiceTest {
         when(repository.isUserExists(nonExistingUserId)).thenReturn(false);
 
         Throwable thrown = assertThrows(RecommendationService.UserNotFoundException.class, () -> service.getRecommendations(nonExistingUserId));
-        assertEquals(thrown.getMessage(), "User not found with ID: " + nonExistingUserId);
+        assertEquals(thrown.getMessage(), "Пользователь с идентификатором: " + nonExistingUserId + " не найден");
     }
 
     @Test

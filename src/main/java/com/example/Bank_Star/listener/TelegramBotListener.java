@@ -1,4 +1,4 @@
-package com.example.Bank_Star.controller;
+package com.example.Bank_Star.listener;
 
 import com.example.Bank_Star.service.RecommendationService;
 import org.slf4j.Logger;
@@ -11,9 +11,9 @@ import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 @Controller
-public class TelegramBotController extends TelegramLongPollingBot {
+public class TelegramBotListener extends TelegramLongPollingBot {
 
-    private static final Logger logger = LoggerFactory.getLogger(TelegramBotController.class);
+    private static final Logger logger = LoggerFactory.getLogger(TelegramBotListener.class);
 
     @Autowired
     private RecommendationService recommendationService;
@@ -30,7 +30,7 @@ public class TelegramBotController extends TelegramLongPollingBot {
                     String response = recommendationService.getRecommendations(username);
                     sendMessage(chatId, response);
                 } catch (Exception e) {
-                    logger.error("Error processing recommendation", e);
+                    logger.error("Рекомендация по обработке ошибок", e);
                     sendMessage(chatId, "Произошла ошибка при обработке запроса");
                 }
             } else if (messageText.equals("/start") || messageText.equals("/help")) {
@@ -48,17 +48,17 @@ public class TelegramBotController extends TelegramLongPollingBot {
         try {
             execute(message);
         } catch (TelegramApiException e) {
-            logger.error("Error sending message to chat {}", chatId, e);
+            logger.error("Ошибка отправки сообщения в чат {}", chatId, e);
         }
     }
 
     @Override
     public String getBotUsername() {
-        return "@anvarkartakaevBot";
+        return "usernameBot";
     }
 
     @Override
     public String getBotToken() {
-        return "8147749676:AAGVLhjVTFmORaRrqKxKVN8cW8j_nWUSMCQ";
+        return "9999999999:AAAaaaXXXxxxZZZzzz_xWWWWW";
     }
 }
