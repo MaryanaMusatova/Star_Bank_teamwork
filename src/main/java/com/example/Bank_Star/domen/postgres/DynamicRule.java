@@ -1,4 +1,4 @@
-package com.example.Bank_Star.domen;
+package com.example.Bank_Star.domen.postgres;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.UUID;
 
 @Entity
-@Table(name = "dynamic_rules")
+@Table(name = "dynamic_rules", schema = "public")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

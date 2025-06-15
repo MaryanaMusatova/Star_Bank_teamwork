@@ -1,12 +1,13 @@
 package com.example.Bank_Star.service;
 
-import com.example.Bank_Star.domen.*;
+import com.example.Bank_Star.domen.postgres.*;
 import com.example.Bank_Star.enums.ComparisonType;
 import com.example.Bank_Star.enums.ProductType;
 import com.example.Bank_Star.enums.TransactionType;
-import com.example.Bank_Star.repository.DynamicRuleRepository;
+import com.example.Bank_Star.repository.postgres.DynamicRuleRepository;
 import com.example.Bank_Star.repository.RecommendationsRepository;
-import com.example.Bank_Star.repository.RuleStatsRepository;
+import com.example.Bank_Star.repository.postgres.RuleStatsRepository;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -25,6 +26,8 @@ public class RecommendationService {
     private final RecommendationsRepository repository;
     private final DynamicRuleRepository dynamicRuleRepository;
     private final RuleStatsRepository ruleStatsRepository;
+    private final H2TransactionService transactionService;
+    private final ObjectMapper objectMapper; // Добавлен для парсинга JSON
 
     public RecommendationResponse getRecommendations(UUID userId) {
         log.info("Получение рекомендаций для пользователя: {}", userId);
@@ -39,6 +42,7 @@ public class RecommendationService {
                 .map(Optional::get)
                 .collect(Collectors.toList());
 
+        // Добавляем динамические рекомендации
         dynamicRuleRepository.findAll().forEach(rule -> {
             if (checkDynamicRule(userId, rule)) {
                 recommendations.add(new Recommendation(
@@ -68,51 +72,63 @@ public class RecommendationService {
     }
 
     private boolean evaluateQuery(UUID userId, RuleQuery query) {
-        String[] args = query.getArguments().split(",");
-        switch (query.getQuery()) {
-            case "USER_OF":
-                return repository.usesProductType(userId,
-                        ProductType.valueOf(args[0]));
-            case "ACTIVE_USER_OF":
-                return isActiveUser(userId,
-                        ProductType.valueOf(args[0]));
-            case "TRANSACTION_SUM_COMPARE":
-                return compareTransactionSum(userId, args);
-            case "TRANSACTION_SUM_COMPARE_DEPOSIT_WITHDRAW":
-                return compareDepositWithdraw(userId, args);
-            default:
-                return false;
+        try {
+            String[] args = objectMapper.readValue(query.getArguments(), String[].class);
+
+            switch (query.getQuery()) {
+                case "USER_OF":
+                    return transactionService.userHasTransactionsOfType(userId, args[0]);
+                case "ACTIVE_USER_OF":
+                    return repository.isActiveUser(userId, ProductType.valueOf(args[0]));
+                case "TRANSACTION_SUM_COMPARE":
+                    return compareTransactionSum(userId, args);
+                case "TRANSACTION_SUM_COMPARE_DEPOSIT_WITHDRAW":
+                    return compareDepositWithdraw(userId, args);
+                case "HAS_ANY_PRODUCT":
+                    return transactionService.userHasAnyProduct(userId);
+                default:
+                    log.warn("Неизвестный тип запроса: {}", query.getQuery());
+                    return false;
+            }
+        } catch (Exception e) {
+            log.error("Ошибка при выполнении запроса", e);
+            return false;
         }
     }
 
-    private boolean isActiveUser(UUID userId, ProductType productType) {
-        String sql = """
-                SELECT COUNT(*) >= 5 FROM transactions t
-                JOIN products p ON t.product_id = p.id
-                WHERE t.user_id = ? AND p.type = ?
-                """;
-        return Boolean.TRUE.equals(repository.getJdbcTemplate().queryForObject(
-                sql, Boolean.class, userId.toString(), productType.name()));
-    }
-
     private boolean compareTransactionSum(UUID userId, String[] args) {
+        if (args.length < 4) {
+            log.error("Недостаточно аргументов для TRANSACTION_SUM_COMPARE");
+            return false;
+        }
+
         ProductType productType = ProductType.valueOf(args[0]);
         TransactionType transactionType = TransactionType.valueOf(args[1]);
         ComparisonType comparison = ComparisonType.valueOf(args[2]);
         BigDecimal value = new BigDecimal(args[3]);
+
         BigDecimal sum = repository.getTransactionSum(userId, productType, transactionType);
         return compareValues(sum, comparison, value);
     }
 
     private boolean compareDepositWithdraw(UUID userId, String[] args) {
+        if (args.length < 2) {
+            log.error("Недостаточно аргументов для TRANSACTION_SUM_COMPARE_DEPOSIT_WITHDRAW");
+            return false;
+        }
+
         ProductType productType = ProductType.valueOf(args[0]);
         ComparisonType comparison = ComparisonType.valueOf(args[1]);
+
         BigDecimal depositSum = repository.getTransactionSum(userId, productType, TransactionType.DEPOSIT);
         BigDecimal withdrawSum = repository.getTransactionSum(userId, productType, TransactionType.WITHDRAW);
+
         return compareValues(depositSum, comparison, withdrawSum);
     }
 
     private boolean compareValues(BigDecimal a, ComparisonType comparison, BigDecimal b) {
+        if (a == null || b == null) return false;
+
         return switch (comparison) {
             case LESS -> a.compareTo(b) < 0;
             case EQUAL -> a.compareTo(b) == 0;
@@ -122,28 +138,23 @@ public class RecommendationService {
         };
     }
 
-    public static class UserNotFoundException extends RuntimeException {
-        public UserNotFoundException(String message) {
-            super(message);
-        }
-    }
-
+    // Остальные методы остаются без изменений
     public String getRecommendations(String username) {
         UUID userId = repository.getUserIdByUsername(username);
         if (userId == null) {
             return "Пользователь не найден";
         }
 
-        List<Recommendation> recommendations = repository.getRecommendations(userId);
-        if (recommendations.isEmpty()) {
+        RecommendationResponse response = getRecommendations(userId);
+        if (response.recommendations().isEmpty()) {
             return "Рекомендации отсутствуют";
         }
 
         StringBuilder sb = new StringBuilder();
         sb.append("Здравствуйте ").append(username).append("!\n");
         sb.append("Новые продукты для вас:\n");
-        for (Recommendation recommendation : recommendations) {
-            sb.append(recommendation.getName()).append(" - ").append(recommendation.getText()).append("\n");
+        for (Recommendation recommendation : response.recommendations()) {
+            sb.append(recommendation.name()).append(" - ").append(recommendation.text()).append("\n");
         }
         return sb.toString();
     }
@@ -159,5 +170,11 @@ public class RecommendationService {
         stats.setCount(stats.getCount() + 1);
         ruleStatsRepository.save(stats);
         log.debug("Увеличена статистика для правила {} до {}", ruleId, stats.getCount());
+    }
+
+    public static class UserNotFoundException extends RuntimeException {
+        public UserNotFoundException(String message) {
+            super(message);
+        }
     }
 }

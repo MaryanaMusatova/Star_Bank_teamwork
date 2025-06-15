@@ -1,6 +1,6 @@
 package com.example.Bank_Star;
 
-import com.example.Bank_Star.domen.RecommendationResponse;
+import com.example.Bank_Star.domen.postgres.RecommendationResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

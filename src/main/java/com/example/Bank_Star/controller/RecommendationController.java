@@ -1,6 +1,6 @@
 package com.example.Bank_Star.controller;
 
-import com.example.Bank_Star.domen.RecommendationResponse;
+import com.example.Bank_Star.domen.postgres.RecommendationResponse;
 import com.example.Bank_Star.service.RecommendationService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

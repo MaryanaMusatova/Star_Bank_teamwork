@@ -4,13 +4,13 @@ import com.example.Bank_Star.service.RecommendationService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Controller;
+import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
-@Controller
+@Component
 public class TelegramBotListener extends TelegramLongPollingBot {
 
     private static final Logger logger = LoggerFactory.getLogger(TelegramBotListener.class);
@@ -54,11 +54,11 @@ public class TelegramBotListener extends TelegramLongPollingBot {
 
     @Override
     public String getBotUsername() {
-        return "usernameBot";
+        return "NapominalkinSkyBot";
     }
 
     @Override
     public String getBotToken() {
-        return "9999999999:AAAaaaXXXxxxZZZzzz_xWWWWW";
+        return "8031199171:AAELsbKRg4IlAK3A7islV62sCfLUu8L16jY";
     }
 }

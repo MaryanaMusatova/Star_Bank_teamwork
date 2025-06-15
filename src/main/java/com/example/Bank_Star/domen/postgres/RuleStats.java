@@ -1,4 +1,4 @@
-package com.example.Bank_Star.domen;
+package com.example.Bank_Star.domen.postgres;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;

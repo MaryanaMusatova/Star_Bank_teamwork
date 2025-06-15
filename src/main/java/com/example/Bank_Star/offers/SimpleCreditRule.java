@@ -1,7 +1,7 @@
 package com.example.Bank_Star.offers;
 
-import com.example.Bank_Star.domen.Recommendation;
-import com.example.Bank_Star.domen.RecommendationRule;
+import com.example.Bank_Star.domen.postgres.Recommendation;
+import com.example.Bank_Star.domen.postgres.RecommendationRule;
 import com.example.Bank_Star.enums.ProductType;
 import com.example.Bank_Star.enums.TransactionType;
 import com.example.Bank_Star.repository.RecommendationsRepository;
