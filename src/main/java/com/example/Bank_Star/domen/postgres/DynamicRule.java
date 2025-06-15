@@ -15,14 +15,19 @@ import java.util.UUID;
 @AllArgsConstructor
 public class DynamicRule {
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id; ;
 
+    @Column(name = "product_name")
     private String productName;
+
+    @Column(name = "product_id")
     private UUID productId;
+
+    @Column(name = "product_text")
     private String productText;
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
-    @JoinColumn(name = "dynamic_rule_id")
-    private List<RuleQuery> rule;
+    @JoinColumn(name = "rule_id", referencedColumnName = "id")
+    private List<RuleQuery> rules;  // Измените имя поля для ясности
 }

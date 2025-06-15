@@ -37,7 +37,7 @@ public class AppConfig {
     // PostgreSQL Configuration (primary)
     @Bean
     @Primary
-    @ConfigurationProperties("spring.datasource.postgres")
+    @ConfigurationProperties("spring.postgresql.datasource")
     public DataSourceProperties postgresDataSourceProperties() {
         return new DataSourceProperties();
     }

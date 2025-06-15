@@ -59,7 +59,7 @@ public class RecommendationService {
 
     private boolean checkDynamicRule(UUID userId, DynamicRule rule) {
         log.debug("Проверка динамического правила {} для пользователя {}", rule.getId(), userId);
-        for (RuleQuery query : rule.getRule()) {
+        for (RuleQuery query : rule.getRules()) {
             boolean result = evaluateQuery(userId, query);
             if (query.getNegate() != null && query.getNegate()) {
                 result = !result;
@@ -75,7 +75,7 @@ public class RecommendationService {
         try {
             String[] args = objectMapper.readValue(query.getArguments(), String[].class);
 
-            switch (query.getQuery()) {
+            switch (query.getQueryType()) {
                 case "USER_OF":
                     return transactionService.userHasTransactionsOfType(userId, args[0]);
                 case "ACTIVE_USER_OF":
@@ -87,7 +87,7 @@ public class RecommendationService {
                 case "HAS_ANY_PRODUCT":
                     return transactionService.userHasAnyProduct(userId);
                 default:
-                    log.warn("Неизвестный тип запроса: {}", query.getQuery());
+                    log.warn("Неизвестный тип запроса: {}", query.getQueryType());
                     return false;
             }
         } catch (Exception e) {

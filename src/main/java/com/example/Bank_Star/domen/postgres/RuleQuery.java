@@ -6,17 +6,24 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.util.UUID;
-
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "rule_queries")
+@Table(name = "query")
 public class RuleQuery {
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
-    private String query;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    @Column(name = "query_type")  // Соответствует столбцу в БД
+    private String queryType;
+
+    @Column(name = "arguments")
     private String arguments;
+
+    @Column(name = "negate")
     private Boolean negate;
+
+    @Column(name = "rule_id")
+    private Long ruleId;
 }
