@@ -1,7 +1,7 @@
 package com.example.Bank_Star.service;
 
-import com.example.Bank_Star.domen.RecommendationResponse;
-import com.example.Bank_Star.domen.RecommendationRule;
+import com.example.Bank_Star.domen.postgres.RecommendationResponse;
+import com.example.Bank_Star.domen.postgres.RecommendationRule;
 import com.example.Bank_Star.repository.RecommendationsRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

@@ -12,8 +12,11 @@ public class InfoController {
     @Value("${spring.application.name}")
     private String applicationName;
 
-    @Value("${project.version}")
-    private String version;
+    private final String version;
+
+    public InfoController(@Value("${project.version:unknown}") String version) {
+        this.version = version;
+    }
 
     @GetMapping("/info")
     public String getInfo() {

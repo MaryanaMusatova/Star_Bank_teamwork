@@ -1,7 +1,7 @@
 package com.example.Bank_Star.controller;
 
-import com.example.Bank_Star.domen.Recommendation;
-import com.example.Bank_Star.domen.RecommendationResponse;
+import com.example.Bank_Star.domen.postgres.Recommendation;
+import com.example.Bank_Star.domen.postgres.RecommendationResponse;
 import com.example.Bank_Star.service.RecommendationService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

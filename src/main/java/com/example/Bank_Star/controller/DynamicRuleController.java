@@ -1,6 +1,6 @@
 package com.example.Bank_Star.controller;
 
-import com.example.Bank_Star.domen.DynamicRule;
+import com.example.Bank_Star.domen.postgres.DynamicRule;
 import com.example.Bank_Star.service.DynamicRuleService;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
