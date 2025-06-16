@@ -29,7 +29,7 @@ public class Rule {
     @Column(name = "product_text")
     private String productText;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "dynamic_rule_id")
     private DynamicRule dynamicRule;
 

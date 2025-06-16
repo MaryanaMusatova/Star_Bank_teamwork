@@ -2,10 +2,16 @@ package com.example.Bank_Star.service;
 
 import com.example.Bank_Star.domen.postgres.DynamicRule;
 import com.example.Bank_Star.domen.postgres.RuleStats;
+import com.example.Bank_Star.dto.DynamicRuleDTO;
+import com.example.Bank_Star.dto.DynamicRuleWithRulesDTO;
+import com.example.Bank_Star.dto.RuleDTO;
+import com.example.Bank_Star.dto.RuleQueryDTO;
 import com.example.Bank_Star.repository.postgres.DynamicRuleRepository;
 import com.example.Bank_Star.repository.postgres.RuleStatsRepository;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.hibernate.Hibernate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,9 +24,11 @@ import java.util.UUID;
 public class DynamicRuleService {
     private final DynamicRuleRepository dynamicRuleRepository;
     private final RuleStatsRepository ruleStatsRepository;
+    private final com.example.Bank_Star.dto.DynamicRuleMapper mapper;
 
     /**
      * Добавляет новое динамическое правило
+     *
      * @param rule Объект DynamicRule для сохранения
      * @return Сохраненный объект DynamicRule
      */
@@ -38,6 +46,7 @@ public class DynamicRuleService {
 
     /**
      * Получает все динамические правила
+     *
      * @return Список всех DynamicRule
      */
     public List<DynamicRule> getAllRules() {
@@ -46,6 +55,7 @@ public class DynamicRuleService {
 
     /**
      * Удаляет правило по productId
+     *
      * @param productId UUID productId правила для удаления
      */
     @Transactional
@@ -65,6 +75,7 @@ public class DynamicRuleService {
 
     /**
      * Получает всю статистику правил
+     *
      * @return Список RuleStats
      */
     public List<RuleStats> getAllRuleStats() {
@@ -73,6 +84,7 @@ public class DynamicRuleService {
 
     /**
      * Находит правило по его ID
+     *
      * @param id UUID правила
      * @return Найденный DynamicRule
      */
@@ -83,6 +95,7 @@ public class DynamicRuleService {
 
     /**
      * Обновляет существующее правило
+     *
      * @param rule Обновленные данные правила
      * @return Обновленный DynamicRule
      */
@@ -92,5 +105,19 @@ public class DynamicRuleService {
             throw new IllegalArgumentException("Rule not found with id: " + rule.getId());
         }
         return dynamicRuleRepository.save(rule);
+    }
+
+    @Transactional(readOnly = true)
+    public DynamicRuleWithRulesDTO getFullRule(UUID id) {
+        // Добавим лог для проверки
+        log.debug("Fetching full rule with ID: {}", id);
+
+        DynamicRule rule = dynamicRuleRepository.findByIdWithFullData(id)
+                .orElseThrow(() -> new EntityNotFoundException("Rule not found"));
+
+        // Проверим, загружены ли правила
+        log.debug("Loaded rules count: {}", rule.getRules().size());
+
+        return mapper.toFullDto(rule, mapper.mapRules(rule.getRules()), null);
     }
 }
