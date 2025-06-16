@@ -1,29 +1,36 @@
 package com.example.Bank_Star.domen.postgres;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
+import org.hibernate.annotations.GenericGenerator;
 
 import java.util.UUID;
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
+
 @Entity
-@Table(name = "query")
+@Table(name = "query", schema = "public")
+@Data
 public class RuleQuery {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-    @Column(name = "query_type")  // Соответствует столбцу в БД
-    private String queryType;
+    @GeneratedValue(generator = "UUID")
+    @GenericGenerator(
+            name = "UUID",
+            strategy = "org.hibernate.id.UUIDGenerator"
+    )
+    @Column(columnDefinition = "UUID")
+    private UUID id;
 
-    @Column(name = "arguments")
-    private String arguments;
+    @ManyToOne
+    @JoinColumn(name = "rule_id")  // Теперь это основное поле для связи
+    private Rule rule;  // Поле должно называться именно так для mappedBy
+
+    @Column(name = "query_type")
+    private String queryType;
 
     @Column(name = "negate")
     private Boolean negate;
 
-    @Column(name = "rule_id")
-    private Long ruleId;
+    @Column(name = "arguments", columnDefinition = "jsonb")
+    private String arguments;
+
+
 }

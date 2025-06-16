@@ -1,37 +1,25 @@
 package com.example.Bank_Star.domen.postgres;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.util.UUID;
 
 @Entity
-@Table(name = "rule_stats")
+@Table(name = "rule_stats", schema = "public")
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class RuleStats {
     @Id
-    private String ruleId;
-    private int count;
+    @Column(columnDefinition = "UUID")
+    private UUID ruleId;
 
-    public RuleStats() {
-    }
-
-    public RuleStats(String ruleId, int count) {
-        this.ruleId = ruleId;
-        this.count = count;
-    }
-
-    public String getRuleId() {
-        return ruleId;
-    }
-
-    public void setRuleId(String ruleId) {
-        this.ruleId = ruleId;
-    }
-
-    public int getCount() {
-        return count;
-    }
-
-    public void setCount(int count) {
-        this.count = count;
-    }
+    @Column(name = "count")
+    private Integer count;
 }

@@ -4,8 +4,8 @@ import com.example.Bank_Star.domen.postgres.*;
 import com.example.Bank_Star.enums.ComparisonType;
 import com.example.Bank_Star.enums.ProductType;
 import com.example.Bank_Star.enums.TransactionType;
-import com.example.Bank_Star.repository.postgres.DynamicRuleRepository;
 import com.example.Bank_Star.repository.RecommendationsRepository;
+import com.example.Bank_Star.repository.postgres.DynamicRuleRepository;
 import com.example.Bank_Star.repository.postgres.RuleStatsRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
@@ -42,30 +42,35 @@ public class RecommendationService {
                 .map(Optional::get)
                 .collect(Collectors.toList());
 
-        // Добавляем динамические рекомендации
-        dynamicRuleRepository.findAll().forEach(rule -> {
-            if (checkDynamicRule(userId, rule)) {
+        // Вставка обновленного блока для динамических рекомендаций
+        dynamicRuleRepository.findAll().forEach(dynamicRule -> {
+            if (checkDynamicRule(userId, dynamicRule)) {
                 recommendations.add(new Recommendation(
-                        rule.getProductId(),
-                        rule.getProductName(),
-                        rule.getProductText()
+                        dynamicRule.getProductId(),
+                        dynamicRule.getProductName(),
+                        dynamicRule.getProductText()
                 ));
-                incrementRuleStats(rule.getId().toString());
+                incrementRuleStats(dynamicRule.getId());  // Теперь передаем UUID
             }
         });
 
         return new RecommendationResponse(userId, recommendations);
     }
 
-    private boolean checkDynamicRule(UUID userId, DynamicRule rule) {
-        log.debug("Проверка динамического правила {} для пользователя {}", rule.getId(), userId);
-        for (RuleQuery query : rule.getRules()) {
-            boolean result = evaluateQuery(userId, query);
-            if (query.getNegate() != null && query.getNegate()) {
-                result = !result;
-            }
-            if (!result) {
-                return false;
+    private boolean checkDynamicRule(UUID userId, DynamicRule dynamicRule) {
+        log.debug("Проверка динамического правила {} для пользователя {}", dynamicRule.getId(), userId);
+
+        // Получаем все Rule для данного DynamicRule
+        for (com.example.Bank_Star.domen.postgres.Rule rule : dynamicRule.getRules()) {
+            // Для каждого Rule проверяем его RuleQuery
+            for (RuleQuery query : rule.getQueries()) {
+                boolean result = evaluateQuery(userId, query);
+                if (query.getNegate() != null && query.getNegate()) {
+                    result = !result;
+                }
+                if (!result) {
+                    return false;
+                }
             }
         }
         return true;
@@ -138,7 +143,7 @@ public class RecommendationService {
         };
     }
 
-    // Остальные методы остаются без изменений
+
     public String getRecommendations(String username) {
         UUID userId = repository.getUserIdByUsername(username);
         if (userId == null) {
@@ -164,12 +169,12 @@ public class RecommendationService {
         log.info("Все кэши рекомендаций очищены");
     }
 
-    private void incrementRuleStats(String ruleId) {
+    private void incrementRuleStats(UUID ruleId) {
         RuleStats stats = ruleStatsRepository.findById(ruleId)
                 .orElse(new RuleStats(ruleId, 0));
+
         stats.setCount(stats.getCount() + 1);
         ruleStatsRepository.save(stats);
-        log.debug("Увеличена статистика для правила {} до {}", ruleId, stats.getCount());
     }
 
     public static class UserNotFoundException extends RuntimeException {

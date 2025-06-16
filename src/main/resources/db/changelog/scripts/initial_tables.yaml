@@ -20,6 +20,7 @@ databaseChangeLog:
                   constraints:
                     primaryKey: true
                     nullable: false
+                    defaultValueComputed: "gen_random_uuid()"
               - column:
                   name: product_name
                   type: VARCHAR(255)
@@ -56,10 +57,11 @@ databaseChangeLog:
             columns:
               - column:
                   name: id
-                  type: BIGSERIAL
+                  type: UUID
                   constraints:
                     primaryKey: true
                     nullable: false
+                    defaultValueComputed: "gen_random_uuid()"
               - column:
                   name: product_name
                   type: VARCHAR(255)
@@ -79,7 +81,7 @@ databaseChangeLog:
                     foreignKeyName: fk_rule_dynamic_rule
                     referencedTableName: dynamic_rules
                     referencedColumnNames: id
-                    onDelete: SET NULL
+                    onDelete: CASCADE
 
   - changeSet:
       id: 1.2
@@ -97,17 +99,19 @@ databaseChangeLog:
             columns:
               - column:
                   name: id
-                  type: BIGSERIAL
+                  type: UUID
                   constraints:
                     primaryKey: true
                     nullable: false
+                    defaultValueComputed: "gen_random_uuid()"
               - column:
                   name: rule_id
-                  type: BIGINT
+                  type: UUID
                   constraints:
                     nullable: false
                     foreignKeyName: fk_query_rule
-                    references: rule(id)
+                    referencedTableName: rule
+                    referencedColumnNames: id
               - column:
                   name: query_type
                   type: VARCHAR(255)
@@ -140,7 +144,7 @@ databaseChangeLog:
                     nullable: false
                     foreignKeyName: fk_rule_stats_rule
                     referencedTableName: rule
-                    referencedColumnNames: product_id
+                    referencedColumnNames: id
                     onDelete: CASCADE
               - column:
                   name: count
@@ -208,7 +212,7 @@ databaseChangeLog:
             columns:
               - column:
                   name: rule_id
-                  type: BIGINT
+                  type: UUID
 
   - changeSet:
       id: 2.3
@@ -230,6 +234,19 @@ databaseChangeLog:
                   name: count
                   type: INTEGER
 
+  - changeSet:
+      id: 2.4
+      author: teem
+      dbms: postgresql
+      changes:
+        - createIndex:
+            tableName: rule
+            indexName: idx_rule_dynamic_rule_id
+            columns:
+              - column:
+                  name: dynamic_rule_id
+                  type: UUID
+
   # Initial data for dynamic_rules
   - changeSet:
       id: 3
@@ -246,7 +263,7 @@ databaseChangeLog:
             columns:
               - column:
                   name: id
-                  value: "a1b2c3d4-1234-5678-9101-112131415161"
+                  valueComputed: "gen_random_uuid()"
               - column:
                   name: product_name
                   value: "Общий финансовый продукт"
@@ -272,6 +289,9 @@ databaseChangeLog:
             tableName: rule
             columns:
               - column:
+                  name: id
+                  valueComputed: "gen_random_uuid()"
+              - column:
                   name: product_name
                   value: "Top Saving"
               - column:
@@ -282,11 +302,14 @@ databaseChangeLog:
                   value: "Описание Top Saving"
               - column:
                   name: dynamic_rule_id
-                  value: "a1b2c3d4-1234-5678-9101-112131415161"
+                  valueComputed: "(SELECT id FROM dynamic_rules WHERE product_id = '00000000-0000-0000-0000-000000000000')"
 
         - insert:
             tableName: query
             columns:
+              - column:
+                  name: id
+                  valueComputed: "gen_random_uuid()"
               - column:
                   name: rule_id
                   valueComputed: "(SELECT id FROM rule WHERE product_id = '59efc529-2fff-41af-baff-90ccd7402925')"
@@ -314,6 +337,9 @@ databaseChangeLog:
             tableName: rule
             columns:
               - column:
+                  name: id
+                  valueComputed: "gen_random_uuid()"
+              - column:
                   name: product_name
                   value: "Invest 500"
               - column:
@@ -324,11 +350,14 @@ databaseChangeLog:
                   value: "Описание Invest 500"
               - column:
                   name: dynamic_rule_id
-                  value: "a1b2c3d4-1234-5678-9101-112131415161"
+                  valueComputed: "(SELECT id FROM dynamic_rules WHERE product_id = '00000000-0000-0000-0000-000000000000')"
 
         - insert:
             tableName: query
             columns:
+              - column:
+                  name: id
+                  valueComputed: "gen_random_uuid()"
               - column:
                   name: rule_id
                   valueComputed: "(SELECT id FROM rule WHERE product_id = '147f6a0f-3b91-413b-ab99-87f081d60d5a')"
@@ -356,6 +385,9 @@ databaseChangeLog:
             tableName: rule
             columns:
               - column:
+                  name: id
+                  valueComputed: "gen_random_uuid()"
+              - column:
                   name: product_name
                   value: "Простой кредит"
               - column:
@@ -366,11 +398,14 @@ databaseChangeLog:
                   value: "Описание Простого кредита"
               - column:
                   name: dynamic_rule_id
-                  value: "a1b2c3d4-1234-5678-9101-112131415161"
+                  valueComputed: "(SELECT id FROM dynamic_rules WHERE product_id = '00000000-0000-0000-0000-000000000000')"
 
         - insert:
             tableName: query
             columns:
+              - column:
+                  name: id
+                  valueComputed: "gen_random_uuid()"
               - column:
                   name: rule_id
                   valueComputed: "(SELECT id FROM rule WHERE product_id = 'ab138afb-f3ba-4a93-b74f-0fcee86d447f')"

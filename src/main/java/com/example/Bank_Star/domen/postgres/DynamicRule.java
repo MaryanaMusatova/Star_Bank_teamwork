@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -15,8 +16,9 @@ import java.util.UUID;
 @AllArgsConstructor
 public class DynamicRule {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id; ;
+    @GeneratedValue(strategy = GenerationType.UUID)
+    @Column(columnDefinition = "UUID")
+    private UUID id;
 
     @Column(name = "product_name")
     private String productName;
@@ -27,7 +29,6 @@ public class DynamicRule {
     @Column(name = "product_text")
     private String productText;
 
-    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
-    @JoinColumn(name = "rule_id", referencedColumnName = "id")
-    private List<RuleQuery> rules;  // Измените имя поля для ясности
+    @OneToMany(mappedBy = "dynamicRule", cascade = CascadeType.ALL)
+    private List<Rule> rules;
 }

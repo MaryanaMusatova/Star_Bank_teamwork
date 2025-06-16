@@ -5,10 +5,11 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Optional;
 import java.util.UUID;
 
 @Repository
 @Transactional("postgresTransactionManager") // Явно указываем, что транзакции идут в PostgreSQL
 public interface DynamicRuleRepository extends JpaRepository<DynamicRule, UUID> {
-    void deleteByProductId(UUID productId);
+    Optional<DynamicRule> findByProductId(UUID productId);
 }
