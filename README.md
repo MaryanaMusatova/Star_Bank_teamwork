@@ -29,8 +29,7 @@
 ```bash
 docker-compose up -d
 
-## Подробная информация о проекте:
-[📖 Перейти к Wiki](https://github.com/MaryanaMusatova/Star_Bank_teamwork/wiki)
+Подробная информация о проекте:[📖 Перейти к Wiki](https://github.com/MaryanaMusatova/Star_Bank_teamwork/wiki)
 
 
 
