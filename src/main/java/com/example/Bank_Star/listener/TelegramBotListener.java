@@ -10,6 +10,8 @@ import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
+import java.util.UUID;
+
 @Component
 public class TelegramBotListener extends TelegramLongPollingBot {
 
@@ -27,10 +29,13 @@ public class TelegramBotListener extends TelegramLongPollingBot {
             if (messageText.startsWith("/recommend ")) {
                 String username = messageText.substring("/recommend ".length()).trim();
                 try {
-                    String response = recommendationService.getRecommendations(username);
+                    // Используем метод, который уже работает с username
+                    String response = recommendationService.getRecommendationsAsString(username);
                     sendMessage(chatId, response);
+                } catch (RecommendationService.UserNotFoundException e) {
+                    sendMessage(chatId, "Пользователь не найден");
                 } catch (Exception e) {
-                    logger.error("Рекомендация по обработке ошибок", e);
+                    logger.error("Ошибка при обработке запроса рекомендаций", e);
                     sendMessage(chatId, "Произошла ошибка при обработке запроса");
                 }
             } else if (messageText.equals("/start") || messageText.equals("/help")) {
@@ -40,7 +45,6 @@ public class TelegramBotListener extends TelegramLongPollingBot {
             }
         }
     }
-
     private void sendMessage(long chatId, String text) {
         SendMessage message = new SendMessage();
         message.setChatId(String.valueOf(chatId));

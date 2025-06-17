@@ -1,17 +1,15 @@
 package com.example.Bank_Star.service;
 
 import com.example.Bank_Star.domen.postgres.DynamicRule;
+import com.example.Bank_Star.domen.postgres.Rule;
 import com.example.Bank_Star.domen.postgres.RuleStats;
-import com.example.Bank_Star.dto.DynamicRuleDTO;
+import com.example.Bank_Star.dto.DynamicRuleMapper;
 import com.example.Bank_Star.dto.DynamicRuleWithRulesDTO;
-import com.example.Bank_Star.dto.RuleDTO;
-import com.example.Bank_Star.dto.RuleQueryDTO;
 import com.example.Bank_Star.repository.postgres.DynamicRuleRepository;
 import com.example.Bank_Star.repository.postgres.RuleStatsRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.hibernate.Hibernate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,7 +22,7 @@ import java.util.UUID;
 public class DynamicRuleService {
     private final DynamicRuleRepository dynamicRuleRepository;
     private final RuleStatsRepository ruleStatsRepository;
-    private final com.example.Bank_Star.dto.DynamicRuleMapper mapper;
+    private final DynamicRuleMapper dynamicRuleMapper;
 
     /**
      * Добавляет новое динамическое правило
@@ -34,16 +32,25 @@ public class DynamicRuleService {
      */
     @Transactional
     public DynamicRule addRule(DynamicRule rule) {
+        // 1. Валидация - правило должно содержать хотя бы одно подправило
+        if (rule.getRules() == null || rule.getRules().isEmpty()) {
+            throw new IllegalArgumentException("DynamicRule должен содержать хотя бы одно Rule");
+        }
+
+        // 2. Сохраняем DynamicRule (каскад сохранит связанные Rules)
         DynamicRule savedRule = dynamicRuleRepository.save(rule);
 
-        // Создаем запись статистики для нового правила
-        RuleStats stats = new RuleStats(savedRule.getId(), 0);
+        // 3. Получаем первое подправило
+        Rule firstRule = savedRule.getRules().get(0);
+
+        // 4. Создаем статистику для подправила (Rule), а не для основного правила (DynamicRule)
+        RuleStats stats = new RuleStats(firstRule.getId(), 0);
         ruleStatsRepository.save(stats);
 
-        log.info("Добавлено новое правило с ID: {}", savedRule.getId());
+        log.info("Добавлено новое правило с ID: {} и статистикой для подправила {}",
+                savedRule.getId(), firstRule.getId());
         return savedRule;
     }
-
     /**
      * Получает все динамические правила
      *
@@ -109,15 +116,9 @@ public class DynamicRuleService {
 
     @Transactional(readOnly = true)
     public DynamicRuleWithRulesDTO getFullRule(UUID id) {
-        // Добавим лог для проверки
-        log.debug("Fetching full rule with ID: {}", id);
-
         DynamicRule rule = dynamicRuleRepository.findByIdWithFullData(id)
                 .orElseThrow(() -> new EntityNotFoundException("Rule not found"));
-
-        // Проверим, загружены ли правила
-        log.debug("Loaded rules count: {}", rule.getRules().size());
-
-        return mapper.toFullDto(rule, mapper.mapRules(rule.getRules()), null);
+        return dynamicRuleMapper.toFullResponse(rule);
     }
 }
+

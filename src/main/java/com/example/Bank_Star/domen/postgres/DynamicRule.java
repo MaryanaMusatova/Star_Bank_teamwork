@@ -1,10 +1,12 @@
 package com.example.Bank_Star.domen.postgres;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -28,6 +30,7 @@ public class DynamicRule {
     @Column(name = "product_text")
     private String productText;
 
-    @OneToMany(mappedBy = "dynamicRule", cascade = CascadeType.ALL)
-    private List<Rule> rules;
+    @OneToMany(mappedBy = "dynamicRule", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @JsonIgnore
+    private List<Rule> rules = new ArrayList<>();
 }

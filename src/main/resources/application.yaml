@@ -43,6 +43,8 @@ spring:
       ddl-auto: none
     properties:
       hibernate:
+        default_batch_fetch_size: 1000
+        enable_lazy_load_no_trans: false
         format_sql: true
         jdbc:
           lob:
@@ -60,3 +62,7 @@ logging:
     logging:
       level:
         liquibase: DEBUG
+      logging:
+          level:
+            org.hibernate.SQL: DEBUG
+            org.hibernate.type.descriptor.sql.BasicBinder: TRACE

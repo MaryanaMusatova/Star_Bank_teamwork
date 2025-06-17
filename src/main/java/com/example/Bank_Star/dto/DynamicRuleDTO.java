@@ -1,7 +1,11 @@
 package com.example.Bank_Star.dto;
 
+import jakarta.validation.constraints.NotEmpty;
 import lombok.Data;
+
+import java.util.List;
 import java.util.UUID;
+
 
 @Data
 public class DynamicRuleDTO {
@@ -9,22 +13,6 @@ public class DynamicRuleDTO {
     private String productName;
     private UUID productId;
     private String productText;
-
-    // Конструктор для ручного маппинга
-    public DynamicRuleDTO(UUID id, String productName, UUID productId, String productText) {
-        this.id = id;
-        this.productName = productName;
-        this.productId = productId;
-        this.productText = productText;
-    }
-
-    // Статический метод конвертации
-    public static DynamicRuleDTO fromEntity(com.example.Bank_Star.domen.postgres.DynamicRule entity) {
-        return new DynamicRuleDTO(
-                entity.getId(),
-                entity.getProductName(),
-                entity.getProductId(),
-                entity.getProductText()
-        );
-    }
+    @NotEmpty(message = "Rules list must contain at least one item")
+    private List<RuleDTO> rules;
 }

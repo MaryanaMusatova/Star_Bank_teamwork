@@ -1,18 +1,24 @@
 package com.example.Bank_Star.service;
 
 import com.example.Bank_Star.domen.postgres.*;
+import com.example.Bank_Star.dto.*;
 import com.example.Bank_Star.enums.ComparisonType;
 import com.example.Bank_Star.enums.ProductType;
 import com.example.Bank_Star.enums.TransactionType;
 import com.example.Bank_Star.repository.RecommendationsRepository;
 import com.example.Bank_Star.repository.postgres.DynamicRuleRepository;
 import com.example.Bank_Star.repository.postgres.RuleStatsRepository;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.hibernate.Hibernate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -21,6 +27,7 @@ import java.util.stream.Collectors;
 @Slf4j
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class RecommendationService {
     private final List<RecommendationRule> staticRules;
     private final RecommendationsRepository repository;
@@ -28,35 +35,28 @@ public class RecommendationService {
     private final RuleStatsRepository ruleStatsRepository;
     private final H2TransactionService transactionService;
     private final ObjectMapper objectMapper; // Добавлен для парсинга JSON
+    private final DynamicRuleMapper dynamicRuleMapper;
 
-    public RecommendationResponse getRecommendations(UUID userId) {
-        log.info("Получение рекомендаций для пользователя: {}", userId);
-        if (!repository.isUserExists(userId)) {
-            log.warn("Пользователь не найден: {}", userId);
-            throw new UserNotFoundException("Пользователь с ID: " + userId + " не найден");
-        }
-
-        List<Recommendation> recommendations = staticRules.stream()
+    public RecommendationResponseDTO getRecommendations(UUID userId) {
+        List<RecommendationDTO> recommendations = staticRules.stream()
                 .map(rule -> rule.check(userId, repository))
                 .filter(Optional::isPresent)
                 .map(Optional::get)
+                .map(rec -> new RecommendationDTO(rec.id(), rec.name(), rec.text()))
                 .collect(Collectors.toList());
 
-        // Вставка обновленного блока для динамических рекомендаций
         dynamicRuleRepository.findAll().forEach(dynamicRule -> {
             if (checkDynamicRule(userId, dynamicRule)) {
-                recommendations.add(new Recommendation(
+                recommendations.add(new RecommendationDTO(
                         dynamicRule.getProductId(),
                         dynamicRule.getProductName(),
                         dynamicRule.getProductText()
                 ));
-                incrementRuleStats(dynamicRule.getId());  // Теперь передаем UUID
             }
         });
 
-        return new RecommendationResponse(userId, recommendations);
+        return new RecommendationResponseDTO(userId, recommendations);
     }
-
     private boolean checkDynamicRule(UUID userId, DynamicRule dynamicRule) {
         log.debug("Проверка динамического правила {} для пользователя {}", dynamicRule.getId(), userId);
 
@@ -78,19 +78,39 @@ public class RecommendationService {
 
     private boolean evaluateQuery(UUID userId, RuleQuery query) {
         try {
-            String[] args = objectMapper.readValue(query.getArguments(), String[].class);
+            // Парсим JSON как объект и извлекаем product_type
+            JsonNode jsonNode = objectMapper.readTree(query.getArguments());
+            String productType = jsonNode.has("product_type")
+                    ? jsonNode.get("product_type").asText()
+                    : jsonNode.toString(); // fallback для обратной совместимости
 
             switch (query.getQueryType()) {
                 case "USER_OF":
-                    return transactionService.userHasTransactionsOfType(userId, args[0]);
+                    return transactionService.userHasTransactionsOfType(userId, productType);
                 case "ACTIVE_USER_OF":
-                    return repository.isActiveUser(userId, ProductType.valueOf(args[0]));
+                    return repository.isActiveUser(userId, ProductType.valueOf(productType));
                 case "TRANSACTION_SUM_COMPARE":
-                    return compareTransactionSum(userId, args);
+                    // Обработка старого формата массива
+                    if (jsonNode.isArray()) {
+                        String[] args = objectMapper.convertValue(jsonNode, String[].class);
+                        return compareTransactionSum(userId, args);
+                    }
+                    // Обработка нового формата объекта
+                    return compareTransactionSum(userId, new String[]{
+                            productType,
+                            jsonNode.get("type").asText(),
+                            jsonNode.get("comparison").asText(),
+                            jsonNode.get("value").asText()
+                    });
                 case "TRANSACTION_SUM_COMPARE_DEPOSIT_WITHDRAW":
-                    return compareDepositWithdraw(userId, args);
-                case "HAS_ANY_PRODUCT":
-                    return transactionService.userHasAnyProduct(userId);
+                    if (jsonNode.isArray()) {
+                        String[] args = objectMapper.convertValue(jsonNode, String[].class);
+                        return compareDepositWithdraw(userId, args);
+                    }
+                    return compareDepositWithdraw(userId, new String[]{
+                            productType,
+                            jsonNode.get("comparison").asText()
+                    });
                 default:
                     log.warn("Неизвестный тип запроса: {}", query.getQueryType());
                     return false;
@@ -144,23 +164,21 @@ public class RecommendationService {
     }
 
 
-    public String getRecommendations(String username) {
+    public String getRecommendationsAsString(String username) {
         UUID userId = repository.getUserIdByUsername(username);
         if (userId == null) {
             return "Пользователь не найден";
         }
 
-        RecommendationResponse response = getRecommendations(userId);
-        if (response.recommendations().isEmpty()) {
-            return "Рекомендации отсутствуют";
-        }
+        RecommendationResponseDTO response = getRecommendations(userId);
 
         StringBuilder sb = new StringBuilder();
         sb.append("Здравствуйте ").append(username).append("!\n");
         sb.append("Новые продукты для вас:\n");
-        for (Recommendation recommendation : response.recommendations()) {
-            sb.append(recommendation.name()).append(" - ").append(recommendation.text()).append("\n");
-        }
+
+        response.recommendations().forEach(dto ->
+                sb.append(dto.name()).append(" - ").append(dto.text()).append("\n"));
+
         return sb.toString();
     }
 
@@ -181,5 +199,10 @@ public class RecommendationService {
         public UserNotFoundException(String message) {
             super(message);
         }
+    }
+    public DynamicRuleWithRulesDTO getFullRule(UUID id) {
+        DynamicRule rule = dynamicRuleRepository.findByIdWithFullData(id)
+                .orElseThrow(() -> new EntityNotFoundException("Rule not found"));
+        return dynamicRuleMapper.toFullResponse(rule);
     }
 }

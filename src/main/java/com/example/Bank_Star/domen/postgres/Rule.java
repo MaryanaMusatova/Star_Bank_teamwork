@@ -1,5 +1,6 @@
 package com.example.Bank_Star.domen.postgres;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Data;
 import org.hibernate.annotations.GenericGenerator;
@@ -31,8 +32,9 @@ public class Rule {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "dynamic_rule_id")
+    @JsonIgnore
     private DynamicRule dynamicRule;
 
-    @OneToMany(mappedBy = "rule", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<RuleQuery> queries;  // Теперь mappedBy корректно ссылается на поле "rule" в RuleQuery
+    @OneToMany(mappedBy = "rule", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    private List<RuleQuery> queries;
 }

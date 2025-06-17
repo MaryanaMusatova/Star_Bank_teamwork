@@ -17,7 +17,7 @@ import java.util.UUID;
 @AllArgsConstructor
 public class RuleStats {
     @Id
-    @Column(columnDefinition = "UUID")
+    @Column(name = "rule_id")
     private UUID ruleId;
 
     @Column(name = "count")

@@ -1,5 +1,6 @@
 package com.example.Bank_Star.domen.postgres;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Data;
 import org.hibernate.annotations.GenericGenerator;
@@ -19,9 +20,10 @@ public class RuleQuery {
     @Column(columnDefinition = "UUID")
     private UUID id;
 
-    @ManyToOne
-    @JoinColumn(name = "rule_id")  // Теперь это основное поле для связи
-    private Rule rule;  // Поле должно называться именно так для mappedBy
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "rule_id")
+    @JsonIgnore
+    private Rule rule;
 
     @Column(name = "query_type")
     private String queryType;
@@ -31,6 +33,4 @@ public class RuleQuery {
 
     @Column(name = "arguments", columnDefinition = "jsonb")
     private String arguments;
-
-
 }
