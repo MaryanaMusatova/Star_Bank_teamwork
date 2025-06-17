@@ -1,0 +1,25 @@
+services:
+  postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: student
+      POSTGRES_PASSWORD: chocolatefrog
+      POSTGRES_DB: recommendations
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  bank-star:
+    image: openjdk:17-jdk-slim
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres
+    environment:
+      SPRING_POSTGRESQL_DATASOURCE_URL: jdbc:postgresql://postgres:5432/recommendations
+      SPRING_POSTGRESQL_DATASOURCE_USERNAME: student
+      SPRING_POSTGRESQL_DATASOURCE_PASSWORD: chocolatefrog
+
+volumes:
+  postgres_data:
