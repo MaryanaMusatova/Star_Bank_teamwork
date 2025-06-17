@@ -5,6 +5,7 @@ import com.example.Bank_Star.domen.postgres.Rule;
 import com.example.Bank_Star.domen.postgres.RuleStats;
 import com.example.Bank_Star.dto.DynamicRuleMapper;
 import com.example.Bank_Star.dto.DynamicRuleWithRulesDTO;
+import com.example.Bank_Star.exceptions.ProductNotFoundException;
 import com.example.Bank_Star.repository.postgres.DynamicRuleRepository;
 import com.example.Bank_Star.repository.postgres.RuleStatsRepository;
 import jakarta.persistence.EntityNotFoundException;
@@ -69,7 +70,7 @@ public class DynamicRuleService {
     public void deleteRule(UUID productId) {
         // Находим правило по productId
         DynamicRule rule = dynamicRuleRepository.findByProductId(productId)
-                .orElseThrow(() -> new IllegalArgumentException("Rule not found with productId: " + productId));
+                .orElseThrow(() -> new ProductNotFoundException(productId));
 
         // Удаляем статистику правила
         ruleStatsRepository.deleteById(rule.getId());
