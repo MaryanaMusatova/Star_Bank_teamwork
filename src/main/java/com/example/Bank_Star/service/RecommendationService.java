@@ -38,6 +38,9 @@ public class RecommendationService {
     private final DynamicRuleMapper dynamicRuleMapper;
 
     public RecommendationResponseDTO getRecommendations(UUID userId) {
+        if (!repository.isUserExists(userId)) {
+            throw new UserNotFoundException("User not found with ID: " + userId);
+        }
         List<RecommendationDTO> recommendations = staticRules.stream()
                 .map(rule -> rule.check(userId, repository))
                 .filter(Optional::isPresent)
