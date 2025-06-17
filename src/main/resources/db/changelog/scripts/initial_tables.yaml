@@ -1,331 +1,449 @@
 databaseChangeLog:
-  # Create tables
+  # Create main tables structure
   - changeSet:
       id: 1
       author: teem
+      dbms: postgresql
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            tableExists:
+              tableName: DYNAMIC_RULES
+              schemaName: public
+      changes:
+        - createTable:
+            tableName: DYNAMIC_RULES
+            columns:
+              - column:
+                  name: id
+                  type: UUID
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+                    defaultValueComputed: "gen_random_uuid()"
+              - column:
+                  name: product_name
+                  type: VARCHAR(255)
+              - column:
+                  name: product_id
+                  type: UUID
+                  constraints:
+                    unique: true
+              - column:
+                  name: product_text
+                  type: TEXT
+              - column:
+                  name: created_at
+                  type: TIMESTAMP
+                  defaultValueComputed: "CURRENT_TIMESTAMP"
+              - column:
+                  name: updated_at
+                  type: TIMESTAMP
+                  defaultValueComputed: "CURRENT_TIMESTAMP"
+
+  - changeSet:
+      id: 1.1
+      author: teem
+      dbms: postgresql
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            tableExists:
+              tableName: rule
+              schemaName: public
       changes:
         - createTable:
             tableName: rule
             columns:
               - column:
                   name: id
-                  type: BIGINT
-                  autoIncrement: true
+                  type: UUID
                   constraints:
                     primaryKey: true
                     nullable: false
+                    defaultValueComputed: "gen_random_uuid()"
               - column:
                   name: product_name
                   type: VARCHAR(255)
               - column:
                   name: product_id
-                  type: VARCHAR(36)
+                  type: UUID
+                  constraints:
+                    unique: true
+                    nullable: false
               - column:
                   name: product_text
-                  type: CLOB
+                  type: TEXT
+              - column:
+                  name: dynamic_rule_id
+                  type: UUID
+                  constraints:
+                    foreignKeyName: fk_rule_dynamic_rule
+                    referencedTableName: dynamic_rules
+                    referencedColumnNames: id
+                    onDelete: CASCADE
 
   - changeSet:
-      id: 2
+      id: 1.2
       author: teem
+      dbms: postgresql
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            tableExists:
+              tableName: query
+              schemaName: public
       changes:
         - createTable:
             tableName: query
             columns:
               - column:
                   name: id
-                  type: BIGINT
-                  autoIncrement: true
+                  type: UUID
                   constraints:
                     primaryKey: true
                     nullable: false
+                    defaultValueComputed: "gen_random_uuid()"
               - column:
                   name: rule_id
-                  type: BIGINT
+                  type: UUID
                   constraints:
                     nullable: false
                     foreignKeyName: fk_query_rule
-                    references: rule(id)
+                    referencedTableName: rule
+                    referencedColumnNames: id
               - column:
                   name: query_type
                   type: VARCHAR(255)
               - column:
                   name: negate
                   type: BOOLEAN
-
-  - changeSet:
-      id: 3
-      author: teem
-      dbms: postgresql
-      changes:
-        - addColumn:
-            tableName: query
-            columns:
               - column:
                   name: arguments
                   type: JSONB
 
   - changeSet:
+      id: 1.3
+      author: teem
+      dbms: postgresql
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            tableExists:
+              tableName: rule_stats
+              schemaName: public
+      changes:
+        - createTable:
+            tableName: rule_stats
+            columns:
+              - column:
+                  name: rule_id
+                  type: UUID
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+                    foreignKeyName: fk_rule_stats_rule
+                    referencedTableName: rule
+                    referencedColumnNames: id
+                    onDelete: CASCADE
+              - column:
+                  name: count
+                  type: INTEGER
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false
+
+  # Create indexes
+  - changeSet:
+      id: 2
+      author: teem
+      dbms: postgresql
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            indexExists:
+              indexName: idx_dynamic_rules_product_id
+              tableName: dynamic_rules
+              schemaName: public
+      changes:
+        - createIndex:
+            tableName: dynamic_rules
+            indexName: idx_dynamic_rules_product_id
+            columns:
+              - column:
+                  name: product_id
+                  type: UUID
+
+  - changeSet:
+      id: 2.1
+      author: teem
+      dbms: postgresql
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            indexExists:
+              indexName: idx_rule_product_id
+              tableName: rule
+              schemaName: public
+      changes:
+        - createIndex:
+            tableName: rule
+            indexName: idx_rule_product_id
+            columns:
+              - column:
+                  name: product_id
+                  type: UUID
+
+  - changeSet:
+      id: 2.2
+      author: teem
+      dbms: postgresql
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            indexExists:
+              indexName: idx_query_rule_id
+              tableName: query
+              schemaName: public
+      changes:
+        - createIndex:
+            tableName: query
+            indexName: idx_query_rule_id
+            columns:
+              - column:
+                  name: rule_id
+                  type: UUID
+
+  - changeSet:
+      id: 2.3
+      author: teem
+      dbms: postgresql
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            indexExists:
+              indexName: idx_rule_stats_count
+              tableName: rule_stats
+              schemaName: public
+      changes:
+        - createIndex:
+            tableName: rule_stats
+            indexName: idx_rule_stats_count
+            columns:
+              - column:
+                  name: count
+                  type: INTEGER
+
+  - changeSet:
+      id: 2.4
+      author: teem
+      dbms: postgresql
+      changes:
+        - createIndex:
+            tableName: rule
+            indexName: idx_rule_dynamic_rule_id
+            columns:
+              - column:
+                  name: dynamic_rule_id
+                  type: UUID
+
+  # Initial data for dynamic_rules
+  - changeSet:
+      id: 3
+      author: teem
+      dbms: postgresql
+      preConditions:
+        - onFail: MARK_RAN
+        - sqlCheck:
+            expectedResult: "0"
+            sql: "SELECT COUNT(*) FROM dynamic_rules WHERE product_id = '00000000-0000-0000-0000-000000000000'"
+      changes:
+        - insert:
+            tableName: dynamic_rules
+            columns:
+              - column:
+                  name: id
+                  valueComputed: "gen_random_uuid()"
+              - column:
+                  name: product_name
+                  value: "Общий финансовый продукт"
+              - column:
+                  name: product_id
+                  value: "00000000-0000-0000-0000-000000000000"
+              - column:
+                  name: product_text
+                  value: "Базовое описание для всех продуктов"
+
+  # Initial data for rules
+  - changeSet:
       id: 4
       author: teem
-      dbms: h2
+      dbms: postgresql
+      preConditions:
+        - onFail: MARK_RAN
+        - sqlCheck:
+            expectedResult: "0"
+            sql: "SELECT COUNT(*) FROM rule WHERE product_id = '59efc529-2fff-41af-baff-90ccd7402925'"
       changes:
-        - addColumn:
+        - insert:
+            tableName: rule
+            columns:
+              - column:
+                  name: id
+                  valueComputed: "gen_random_uuid()"
+              - column:
+                  name: product_name
+                  value: "Top Saving"
+              - column:
+                  name: product_id
+                  value: "59efc529-2fff-41af-baff-90ccd7402925"
+              - column:
+                  name: product_text
+                  value: "Описание Top Saving"
+              - column:
+                  name: dynamic_rule_id
+                  valueComputed: "(SELECT id FROM dynamic_rules WHERE product_id = '00000000-0000-0000-0000-000000000000')"
+
+        - insert:
             tableName: query
             columns:
               - column:
+                  name: id
+                  valueComputed: "gen_random_uuid()"
+              - column:
+                  name: rule_id
+                  valueComputed: "(SELECT id FROM rule WHERE product_id = '59efc529-2fff-41af-baff-90ccd7402925')"
+              - column:
+                  name: query_type
+                  value: "USER_OF"
+              - column:
                   name: arguments
-                  type: CLOB
+                  value: '{"product_type": "DEBIT"}'
+              - column:
+                  name: negate
+                  value: "false"
 
   - changeSet:
       id: 5
       author: teem
+      dbms: postgresql
+      preConditions:
+        - onFail: MARK_RAN
+        - sqlCheck:
+            expectedResult: "0"
+            sql: "SELECT COUNT(*) FROM rule WHERE product_id = '147f6a0f-3b91-413b-ab99-87f081d60d5a'"
       changes:
-        - createTable:
-            tableName: rule_statistic
+        - insert:
+            tableName: rule
             columns:
               - column:
                   name: id
-                  type: BIGINT
-                  autoIncrement: true
-                  constraints:
-                    primaryKey: true
-                    nullable: false
+                  valueComputed: "gen_random_uuid()"
+              - column:
+                  name: product_name
+                  value: "Invest 500"
+              - column:
+                  name: product_id
+                  value: "147f6a0f-3b91-413b-ab99-87f081d60d5a"
+              - column:
+                  name: product_text
+                  value: "Описание Invest 500"
+              - column:
+                  name: dynamic_rule_id
+                  valueComputed: "(SELECT id FROM dynamic_rules WHERE product_id = '00000000-0000-0000-0000-000000000000')"
+
+        - insert:
+            tableName: query
+            columns:
+              - column:
+                  name: id
+                  valueComputed: "gen_random_uuid()"
               - column:
                   name: rule_id
-                  type: BIGINT
-                  constraints:
-                    nullable: false
+                  valueComputed: "(SELECT id FROM rule WHERE product_id = '147f6a0f-3b91-413b-ab99-87f081d60d5a')"
               - column:
-                  name: statistic_data
-                  type: CLOB
+                  name: query_type
+                  value: "USER_OF"
+              - column:
+                  name: arguments
+                  value: '{"product_type": "DEBIT"}'
+              - column:
+                  name: negate
+                  value: "false"
 
   - changeSet:
       id: 6
       author: teem
+      dbms: postgresql
+      preConditions:
+        - onFail: MARK_RAN
+        - sqlCheck:
+            expectedResult: "0"
+            sql: "SELECT COUNT(*) FROM rule WHERE product_id = 'ab138afb-f3ba-4a93-b74f-0fcee86d447f'"
       changes:
-        - addForeignKeyConstraint:
-            baseTableName: rule_statistic
-            baseColumnNames: rule_id
-            constraintName: fk_rule_statistic_rule
-            referencedTableName: rule
-            referencedColumnNames: id
-            onDelete: CASCADE
+        - insert:
+            tableName: rule
+            columns:
+              - column:
+                  name: id
+                  valueComputed: "gen_random_uuid()"
+              - column:
+                  name: product_name
+                  value: "Простой кредит"
+              - column:
+                  name: product_id
+                  value: "ab138afb-f3ba-4a93-b74f-0fcee86d447f"
+              - column:
+                  name: product_text
+                  value: "Описание Простого кредита"
+              - column:
+                  name: dynamic_rule_id
+                  valueComputed: "(SELECT id FROM dynamic_rules WHERE product_id = '00000000-0000-0000-0000-000000000000')"
 
-  # Entering data
+        - insert:
+            tableName: query
+            columns:
+              - column:
+                  name: id
+                  valueComputed: "gen_random_uuid()"
+              - column:
+                  name: rule_id
+                  valueComputed: "(SELECT id FROM rule WHERE product_id = 'ab138afb-f3ba-4a93-b74f-0fcee86d447f')"
+              - column:
+                  name: query_type
+                  value: "USER_OF"
+              - column:
+                  name: arguments
+                  value: '{"product_type": "CREDIT"}'
+              - column:
+                  name: negate
+                  value: "true"
+
+  # Create view for combined data
   - changeSet:
       id: 7
       author: teem
+      dbms: postgresql
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            viewExists:
+              viewName: v_combined_rules
+              schemaName: public
       changes:
-        - insert:
-            tableName: rule
-            columns:
-              - column:
-                  name: product_name
-                  value: 'Top Saving'
-              - column:
-                  name: product_id
-                  value: '59efc529-2fff-41af-baff-90ccd7402925'
-              - column:
-                  name: product_text
-                  value: |
-                    Откройте свою собственную «Копилку» с нашим банком! «Копилка» — это уникальный банковский инструмент
-                    , который поможет вам легко и удобно накапливать деньги на важные цели. Больше никаких забытых чеков
-                    и потерянных квитанций — всё под контролем!
-                    Преимущества «Копилки»:Накопление средств на конкретные цели. Установите лимит и срок накопления,
-                    и банк будет автоматически переводить определенную сумму на ваш счет.Прозрачность и контроль.
-                    Отслеживайте свои доходы и расходы, контролируйте процесс накопления и корректируйте стратегию при
-                    необходимости.Безопасность и надежность. Ваши средства находятся под защитой банка, а доступ к ним
-                    возможен только через мобильное приложение или интернет-банкинг.Начните использовать «Копилку» уже
-                    сегодня и станьте ближе к своим финансовым целям!
-
-        - insert:
-            tableName: query
-            columns:
-              - column:
-                  name: rule_id
-                  valueComputed: (SELECT MAX(id) FROM rule)
-              - column:
-                  name: query_type
-                  value: 'USER_OF'
-              - column:
-                  name: arguments
-                  value: '["DEBIT"]'
-              - column:
-                  name: negate
-                  value: 'false'
-
-        - insert:
-            tableName: query
-            columns:
-              - column:
-                  name: rule_id
-                  valueComputed: (SELECT MAX(id) FROM rule)
-              - column:
-                  name: query_type
-                  value: 'PRODUCT_OR_PRODUCT_SUMS_DEPOSIT_MORE_VALUE'
-              - column:
-                  name: arguments
-                  value: '["DEBIT", "DEPOSIT", ">=", 50000, "SAVING", "DEPOSIT", ">=", 50000]'
-              - column:
-                  name: negate
-                  value: 'false'
-
-        - insert:
-            tableName: query
-            columns:
-              - column:
-                  name: rule_id
-                  valueComputed: (SELECT MAX(id) FROM rule)
-              - column:
-                  name: query_type
-                  value: 'TRANSACTION_SUM_COMPARE_DEPOSIT_WITHDRAW'
-              - column:
-                  name: arguments
-                  value: '["DEBIT", ">"]'
-              - column:
-                  name: negate
-                  value: 'false'
-
-  - changeSet:
-      id: 8
-      author: teem
-      changes:
-        - insert:
-            tableName: rule
-            columns:
-              - column:
-                  name: product_name
-                  value: 'Invest 500'
-              - column:
-                  name: product_id
-                  value: '147f6a0f-3b91-413b-ab99-87f081d60d5a'
-              - column:
-                  name: product_text
-                  value: |
-                    Откройте свой путь к успеху с индивидуальным инвестиционным счетом (ИИС) от нашего банка!
-                    Воспользуйтесь налоговыми льготами и начните инвестировать с умом. Пополните счет до конца года и
-                    получите выгоду в виде вычета на взнос в следующем налоговом периоде. Не упустите возможность 
-                    разнообразить свой портфель, снизить риски и следить за актуальными рыночными тенденциями. 
-                    Откройте ИИС сегодня и станьте ближе к финансовой независимости!
-
-        - insert:
-            tableName: query
-            columns:
-              - column:
-                  name: rule_id
-                  valueComputed: (SELECT MAX(id) FROM rule)
-              - column:
-                  name: query_type
-                  value: 'USER_OF'
-              - column:
-                  name: arguments
-                  value: '["DEBIT"]'
-              - column:
-                  name: negate
-                  value: 'false'
-
-        - insert:
-            tableName: query
-            columns:
-              - column:
-                  name: rule_id
-                  valueComputed: (SELECT MAX(id) FROM rule)
-              - column:
-                  name: query_type
-                  value: 'USER_OF'
-              - column:
-                  name: arguments
-                  value: '["INVEST"]'
-              - column:
-                  name: negate
-                  value: 'true'
-
-        - insert:
-            tableName: query
-            columns:
-              - column:
-                  name: rule_id
-                  valueComputed: (SELECT MAX(id) FROM rule)
-              - column:
-                  name: query_type
-                  value: 'TRANSACTION_SUM_COMPARE'
-              - column:
-                  name: arguments
-                  value: '["SAVING", "DEPOSIT", ">", 1000]'
-              - column:
-                  name: negate
-                  value: 'false'
-
-  - changeSet:
-      id: 9
-      author: teem
-      changes:
-        - insert:
-            tableName: rule
-            columns:
-              - column:
-                  name: product_name
-                  value: 'Простой кредит'
-              - column:
-                  name: product_id
-                  value: 'ab138afb-f3ba-4a93-b74f-0fcee86d447f'
-              - column:
-                  name: product_text
-                  value: |
-                    Откройте мир выгодных кредитов с нами! Ищете способ быстро и без лишних хлопот получить нужную сумму?
-                    Тогда наш выгодный кредит — именно то, что вам нужно! Мы предлагаем низкие процентные ставки, гибкие
-                    условия и индивидуальный подход к каждому клиенту.           
-                    Почему выбирают нас:               
-                    Быстрое рассмотрение заявки. Мы ценим ваше время, поэтому процесс рассмотрения заявки занимает всего 
-                    несколько часов.Удобное оформление. Подать заявку на кредит можно онлайн на нашем сайте или в
-                    мобильном  приложении.Широкий выбор кредитных продуктов. Мы предлагаем кредиты на различные цели: 
-                    покупку  недвижимости, автомобиля, образование, лечение и многое другое.             
-                      Не упустите возможность воспользоваться выгодными условиями кредитования от нашей компании!
-
-        - insert:
-            tableName: query
-            columns:
-              - column:
-                  name: rule_id
-                  valueComputed: (SELECT MAX(id) FROM rule)
-              - column:
-                  name: query_type
-                  value: 'USER_OF'
-              - column:
-                  name: arguments
-                  value: '["CREDIT"]'
-              - column:
-                  name: negate
-                  value: 'true'
-
-        - insert:
-            tableName: query
-            columns:
-              - column:
-                  name: rule_id
-                  valueComputed: (SELECT MAX(id) FROM rule)
-              - column:
-                  name: query_type
-                  value: 'TRANSACTION_SUM_COMPARE_DEPOSIT_WITHDRAW'
-              - column:
-                  name: arguments
-                  value: '["DEBIT", ">", "DEBIT"]'
-              - column:
-                  name: negate
-                  value: 'false'
-
-        - insert:
-            tableName: query
-            columns:
-              - column:
-                  name: rule_id
-                  valueComputed: (SELECT MAX(id) FROM rule)
-              - column:
-                  name: query_type
-                  value: 'TRANSACTION_SUM_COMPARE'
-              - column:
-                  name: arguments
-                  value: '["DEBIT", "WITHDRAW", ">", 100000]'
-              - column:
-                  name: negate
-                  value: 'false'
+        - createView:
+            viewName: v_combined_rules
+            replaceIfExists: true
+            selectQuery: |
+              SELECT 
+                r.id as rule_id,
+                r.product_id,
+                r.product_name as rule_name,
+                r.product_text as rule_description,
+                dr.id as dynamic_rule_id,
+                dr.product_name as dynamic_rule_name,
+                dr.product_text as dynamic_rule_description,
+                dr.created_at,
+                dr.updated_at
+              FROM rule r
+              LEFT JOIN dynamic_rules dr ON r.dynamic_rule_id = dr.id

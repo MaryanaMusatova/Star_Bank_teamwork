@@ -1,4 +1,4 @@
-package com.example.Bank_Star.domen;
+package com.example.Bank_Star.domen.postgres;
 
 import com.example.Bank_Star.repository.RecommendationsRepository;
 

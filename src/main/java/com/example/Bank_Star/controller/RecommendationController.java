@@ -1,6 +1,6 @@
 package com.example.Bank_Star.controller;
 
-import com.example.Bank_Star.domen.RecommendationResponse;
+import com.example.Bank_Star.dto.RecommendationResponseDTO;
 import com.example.Bank_Star.service.RecommendationService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -11,6 +11,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/recommendations")
 public class RecommendationController {
+
     private final RecommendationService service;
 
     public RecommendationController(RecommendationService service) {
@@ -18,7 +19,7 @@ public class RecommendationController {
     }
 
     @GetMapping("/{userId}")
-    public RecommendationResponse getRecommendations(@PathVariable UUID userId) {
+    public RecommendationResponseDTO getRecommendations(@PathVariable UUID userId) {
         return service.getRecommendations(userId);
     }
 
