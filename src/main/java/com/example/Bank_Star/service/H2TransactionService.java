@@ -1,5 +1,6 @@
 package com.example.Bank_Star.service;
 
+import com.example.Bank_Star.exceptions.TransactionValidationException;
 import com.example.Bank_Star.repository.h2.H2TransactionRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -21,6 +22,9 @@ public class H2TransactionService {
     }
 
     public BigDecimal getTransactionSumByType(UUID userId, String transactionType) {
+        if (userId == null || transactionType == null) {
+            throw new TransactionValidationException("User ID and transaction type cannot be null");
+        }
         return transactionRepository.getTransactionSumByType(userId, transactionType);
     }
 }
