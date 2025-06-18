@@ -66,3 +66,8 @@ logging:
           level:
             org.hibernate.SQL: DEBUG
             org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+
+  telegram:
+  bot:
+    token: 9999999999:AAAaaaXXXxxxZZZzzz_xWWWWW
+    username: usernameBot
