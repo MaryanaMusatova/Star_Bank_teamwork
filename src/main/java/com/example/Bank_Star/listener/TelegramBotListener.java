@@ -58,11 +58,11 @@ public class TelegramBotListener extends TelegramLongPollingBot {
 
     @Override
     public String getBotUsername() {
-        return "1111111111111111";
+        return "usernameBot";
     }
 
     @Override
     public String getBotToken() {
-        return "111111111111111111111";
+        return "9999999999:AAAaaaXXXxxxZZZzzz_xWWWWW";
     }
 }
